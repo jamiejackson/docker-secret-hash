@@ -28,6 +28,9 @@ export $(grep -v '^#' ./output/secret-tags | xargs)
 docker-compose -f ./test/input/short.yml config 2>/dev/null | docker stack deploy -c- mystack
 # for kicks, take a look at the rendered compose configuration that was used above
 docker-compose -f ./test/input/short.yml config
+
+# remove orphaned secrets
+docker secret rm $(docker secret ls -q) 2> /dev/null || true
 ```
 
 ### Test
@@ -37,10 +40,8 @@ docker-compose -f ./test/input/short.yml config
 container_id=$(for f in $(docker service ps -q mystack_nginx);do docker inspect --format '{{.Status.ContainerStatus.ContainerID}}' $f; break; done)
 # show one of the secrets from within the service's container
 docker exec -it $container_id cat /run/secrets/aws_inbound_path
-
-# remove orphaned secrets
-docker secret rm $(docker secret ls -q) 2> /dev/null || true
 ```
+
 ### Secret Value Change Test
 
 ```sh
