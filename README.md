@@ -5,13 +5,19 @@ TODO: I need to clean up this repo.
 
 ## Example
 
+### Setup
+
 ```sh
 # put secrets in a temporary location for this example
 cp -r test/secrets/ /tmp/secrets
 
 # build the secret hasher image
 docker-compose -f docker-compose-test.yml build
+```
 
+### Deploy Service
+
+```sh
 # use the secret hasher container to create some variables to export
 docker-compose -f docker-compose-test.yml run parse >  ./output/secret-tags
 # take a look at the variables, for kicks (*)
@@ -22,8 +28,11 @@ export $(grep -v '^#' ./output/secret-tags | xargs)
 docker-compose -f ./test/input/short.yml config 2>/dev/null | docker stack deploy -c- mystack
 # for kicks, take a look at the rendered compose configuration that was used above
 docker-compose -f ./test/input/short.yml config
+```
 
-### test ###
+### Test
+
+```sh
 # get the service's container id
 container_id=$(for f in $(docker service ps -q mystack_nginx);do docker inspect --format '{{.Status.ContainerStatus.ContainerID}}' $f; break; done)
 # show one of the secrets from within the service's container
@@ -32,6 +41,14 @@ docker exec -it $container_id cat /run/secrets/aws_inbound_path
 # remove orphaned secrets
 docker secret rm $(docker secret ls -q) 2> /dev/null || true
 ```
+### Secret Value Change Test
+
+```sh
+# change a secret's value
+echo "oh no, i'm a new secret value" > /tmp/secrets/aws_inbound_path
+```
+
+Now, repeat the "Deploy Service" and "Test" steps, and you should see the test return the new secret value.
 
 ## Notes
 
