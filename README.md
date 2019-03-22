@@ -11,8 +11,10 @@ cp -r test/secrets/ /tmp/secrets
 # build the secret hasher
 docker-compose -f docker-compose-test.yml build
 
-# create some tag variables to export
+# create some variables to export
 docker-compose -f docker-compose-test.yml run parse >  ./output/secret-tags
+# take a look at the variables, for kicks
+cat ./output/secret-tags
 # export the variables. this syntax is mac-only. what's a cross-platform way to do the same?
 export $(grep -v '^#' ./output/secret-tags | xargs)
 # recreate the target compose file with the new secret names
