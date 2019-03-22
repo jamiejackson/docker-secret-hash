@@ -1,6 +1,8 @@
 # docker-secret-hash
 Use hash tokens in docker compose secret names to get around immutable docker secret limitations. (See https://github.com/moby/moby/issues/29882#issuecomment-475807643 )
 
+This uses file-based secrets. The secret hasher image would need to be tweaked if the secrets came from some other secret store.
+
 TODO: I need to clean up this repo.
 
 ## Example
