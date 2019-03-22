@@ -17,9 +17,9 @@ docker-compose -f docker-compose-test.yml run parse >  ./output/secret-tags
 cat ./output/secret-tags
 # export the variables. this syntax is linux-only. what's a cross-platform way to do the same?
 export $(grep -v '^#' ./output/secret-tags | xargs)
-# recreate the target compose file with the new secret names and deploy the stack
+# interpolate variables in the target compose file with the new secret names and deploy the stack
 docker-compose -f ./test/input/short.yml config 2>/dev/null | docker stack deploy -c- mystack
-# for kicks, take a look at the interpreted compose configuration that was used above
+# for kicks, take a look at the rendered compose configuration that was used above
 docker-compose -f ./test/input/short.yml config
 
 ### test ###
