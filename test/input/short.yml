@@ -1,0 +1,16 @@
+version: '3.6'
+
+services:
+  nginx:
+    image: nginx
+    secrets:
+      - aws_inbound_path
+      - cfml_app_secrets
+
+secrets:
+  aws_inbound_path:
+    file: /tmp/secrets/aws_inbound_path
+    name: aws_inbound_path-${SECRET_SUM_aws_inbound_path:-0}
+  cfml_app_secrets:
+    file: /tmp/secrets/credentials.properties
+    name: cfml_app_secrets-${SECRET_SUM_cfml_app_secrets:-0}

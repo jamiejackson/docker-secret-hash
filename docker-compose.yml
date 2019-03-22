@@ -1,0 +1,10 @@
+version: '3.6'
+
+services:
+  parse:
+    build: .
+    image: secret-tags
+    volumes:
+      - ${COMPOSITE_COMPOSE_FILE}:/compose.yml
+      - ${SECRETS_ROOT_DIR}:${SECRETS_ROOT_DIR}
+    command: /parse.py

@@ -1,0 +1,279 @@
+networks:
+  lucee_db_solr: {}
+  lucee_elasticsearch: {}
+  lucee_mail: {}
+  lucee_redis: {}
+  lucee_web: {}
+  redis_redis-commander: {}
+  web_fess: {}
+  web_reverse-proxy:
+    external: true
+    name: hudx_local2_web_reverse-proxy
+secrets:
+  aws_inbound_path:
+    file: /home/docker/secrets/stacks/local2/cfml/aws_inbound_path
+    name: aws_inbound_path-298
+  cfml_app_secrets:
+    file: /home/docker/secrets/stacks/local2/cfml/credentials.properties
+    name: cfml_app_secrets-298
+  db_root_password:
+    file: /home/docker/secrets/stacks/local2/db/db_root_password
+    name: db_root_password-298
+  fr_admin_password:
+    file: /home/docker/secrets/stacks/local2/cfml/fr_admin_password
+    name: fr_admin_password-298
+  fr_license_key:
+    file: /home/docker/secrets/stacks/local2/cfml/fr_license_key
+    name: fr_license_key-298
+  fr_observer_hash_password:
+    file: /home/docker/secrets/stacks/local2/cfml/fr_observer_hash_password
+    name: fr_observer_hash_password-298
+  lucee_db_alternate_password:
+    file: /home/docker/secrets/stacks/local2/cfml/lucee_db_alternate_password
+    name: lucee_db_alternate_password-298
+  lucee_db_primary_password:
+    file: /home/docker/secrets/stacks/local2/cfml/lucee_db_primary_password
+    name: lucee_db_primary_password-298
+  s3_path:
+    file: /home/docker/secrets/stacks/local2/s3/s3path
+    name: s3_path-298
+  site_auth.groups:
+    file: /home/docker/secrets/stacks/local2/web/site_auth_groups
+    name: site_auth.groups-298
+  site_auth.passwords:
+    file: /home/docker/secrets/stacks/local2/web/site_auth_passwords
+    name: site_auth.passwords-298
+  site_ssl_private_key:
+    file: /home/docker/secrets/common/star.mysite.com.key
+    name: site_ssl_private_key-298
+  site_test_dir_auth.passwords:
+    file: /home/docker/secrets/stacks/local2/web/site_test_dir_auth_passwords
+    name: site_test_dir_auth.passwords-298
+  solr_encrypt_key:
+    file: /home/docker/secrets/stacks/local2/solr/encrypt.key
+    name: solr_encrypt_key-298
+services:
+  db:
+    build:
+      context: /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2
+        Stack (local2.mysite.com on hudx-jenkins-slave)/docker_root/image/db
+    container_name: db
+    environment:
+      MYSQL_DATABASE: hudx
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      TZ: America/Chicago
+    image: 127.0.0.1:5000/hudx_local2_db:latest
+    networks:
+      lucee_db_solr: null
+    ports:
+    - published: 3306
+      target: 3306
+    restart: unless-stopped
+    secrets:
+    - source: db_root_password
+    volumes:
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/docker_root/docker-compose/conf/sql/add_users.sql:/docker-entrypoint-initdb.d/add_users.sql:rw
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/docker_root/docker-compose/conf/sql/hudx_fixture_db.sql:/docker-entrypoint-initdb.d/hudx_fixture_db.sql:rw
+    - db-data:/var/lib/mysql:rw
+  lucee:
+    build:
+      args:
+        FUSIONREACTOR_VERSION: 5.2.7
+        SITE_SSL_PUBLIC_KEY_FILE_NAME: local.mysite.com.cert
+        SUMTOTAL_HOST: sb1.geolearning.com
+      context: /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2
+        Stack (local2.mysite.com on hudx-jenkins-slave)/docker_root/image/lucee
+    container_name: lucee
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        window: 120s
+      update_config:
+        failure_action: rollback
+        order: start-first
+    environment:
+      DB_ALTERNATE_DSN: hudx_slave
+      DB_ALTERNATE_HOST: db
+      DB_ALTERNATE_SCHEMA: hudx
+      DB_ALTERNATE_USER: svc_cfml
+      DB_PRIMARY_DSN: onecpd_cms
+      DB_PRIMARY_HOST: db
+      DB_PRIMARY_SCHEMA: hudx
+      DB_PRIMARY_USER: svc_cfml
+      ENABLE_SCHEDULED_TASKS: "true"
+      FUSIONREACTOR_ENABLE: "false"
+      LUCEE_ADMIN_HASH_PASSWORD: 5c37c2cc5d670579ea08ba721b89e522472c2a2721866bf554fd9e7283f9f3a7
+      LUCEE_JAVA_OPTS: -Xms512m -Xmx4096m
+      LUCEE_LOGS: /opt/lucee/web/logs
+      LUCEE_SEARCH_HOST: search.mysite.com
+      LUCEE_SEARCH_PORT: '9200'
+      LUCEE_SEARCH_PROTOCOL: http
+      SITE_HOST_NAME: local2.mysite.com
+      SMTP_HOST: mail
+      SOLR_CONTEXT_ROOT: /solr
+      SOLR_HOST: solr
+      SOLR_PORT: '8983'
+      TZ: America/Chicago
+      WEB_PUBLISHED_SSL_PORT: '4000'
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 15s
+      test: curl --fail -s http://localhost:8888/test/health/lucee_up.cfm || exit
+        1
+      timeout: 5s
+    image: 127.0.0.1:5000/hudx_local2_lucee:latest
+    networks:
+      lucee_db_solr: null
+      lucee_elasticsearch: null
+      lucee_mail: null
+      lucee_redis: null
+      lucee_web: null
+    ports:
+    - published: 4009
+      target: 8088
+    restart: unless-stopped
+    secrets:
+    - source: aws_inbound_path
+    - source: cfml_app_secrets
+    - source: fr_admin_password
+    - source: fr_license_key
+    - source: fr_observer_hash_password
+    - source: lucee_db_alternate_password
+    - source: lucee_db_primary_password
+    - source: s3_path
+    stop_grace_period: 30s
+    volumes:
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/docker_root/image/lucee/conf/populate_templates.sh:/docker-entrypoint-init.d/populate_templates.sh:rw
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/fake_mediashare:/home/jenkins/jenkins_slave/workspace/HUD
+      Exchange - Deploy Local2 Stack (local2.mysite.com on hudx-jenkins-slave)/fake_mediashare:rw
+    - lucee-fusionreactor-logs:/opt/fusionreactor/log:rw
+    - lucee-logs:/opt/lucee/web/logs:rw
+    - lucee-remote-client:/opt/lucee/web/remote-client:rw
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/s3:/s3:rw
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/docker_root/image/lucee/conf/templates:/tmp/template_renderer/templates:rw
+    - lucee-tomcat-logs:/usr/local/tomcat/logs:rw
+    - /home/docker/secrets/stacks/local2/cfml:/var/credentials:ro
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/cfml_root:/var/www:rw
+  mail:
+    container_name: mail
+    image: helder/mailcatcher
+    networks:
+      lucee_mail: null
+    ports:
+    - published: 4008
+      target: 80
+    restart: unless-stopped
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis
+    networks:
+      lucee_redis: null
+      redis_redis-commander: null
+    volumes:
+    - redis-data:/data:rw
+  redis-commander:
+    container_name: redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    image: rediscommander/redis-commander:latest
+    networks:
+      redis_redis-commander: null
+    ports:
+    - published: 4013
+      target: 8081
+    restart: always
+  solr:
+    build:
+      context: /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2
+        Stack (local2.mysite.com on hudx-jenkins-slave)/docker_root/image/solr
+    command: '-a " -Dcustom.dataimporter.datasource.driver=org.mariadb.jdbc.Driver
+      -Dcustom.dataimporter.datasource.url=jdbc:mysql://db:3306/hudx?serverTimezone=America/Chicago&useLegacyDatetimeCode=false
+      -Dcustom.dataimporter.datasource.user=svc_solr -Dcustom.dataimporter.datasource.password=U2FsdGVkX1/tj756axhYTONgzqmdXuS2qhY8JwdQuX8=
+      -Dcustom.dataimporter.datasource.timezone=America/Chicago -Dcustom.solr.timezone=UTC
+      "
+
+      '
+    container_name: solr
+    environment:
+      SOLR_HEAP: 1024m
+    image: 127.0.0.1:5000/hudx_local2_solr:latest
+    networks:
+      lucee_db_solr: null
+    ports:
+    - published: 4006
+      target: 8983
+    restart: unless-stopped
+    secrets:
+    - source: solr_encrypt_key
+    volumes:
+    - solr_data:/opt/solr/data:rw
+    - solr_logs:/opt/solr/server/logs:rw
+  web:
+    build:
+      args:
+        CMS_IMAGES_FALLBACK_SITE: https://www.mysite.com
+        FUSIONREACTOR_ENABLE: "false"
+        IS_LOCAL_DEV: "true"
+        LUCEE_PORT: '8888'
+        SITE_AUTH_ENABLE: "false"
+        SITE_HOST_NAME: local2.mysite.com
+        SITE_NULL_HOST_NAME: ''
+        SITE_SSL_PUBLIC_KEY_FILE_NAME: local.mysite.com.cert
+      context: /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2
+        Stack (local2.mysite.com on hudx-jenkins-slave)/docker_root/image/web
+    container_name: web
+    environment:
+      VIRTUAL_HOST: local2.mysite.com
+      VIRTUAL_PORT: 443
+      VIRTUAL_PROTO: https
+    image: 127.0.0.1:5000/hudx_local2_web:latest
+    networks:
+      lucee_web:
+        aliases:
+        - local2.mysite.com
+      web_fess:
+        aliases:
+        - local2.mysite.com
+      web_reverse-proxy:
+        aliases:
+        - local2.mysite.com
+    ports:
+    - published: 4001
+      target: 80
+    - published: 4000
+      target: 443
+    restart: unless-stopped
+    secrets:
+    - source: site_auth.groups
+    - source: site_auth.passwords
+    - source: site_ssl_private_key
+    - source: site_test_dir_auth.passwords
+    volumes:
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/fake_mediashare:/home/jenkins/jenkins_slave/workspace/HUD
+      Exchange - Deploy Local2 Stack (local2.mysite.com on hudx-jenkins-slave)/fake_mediashare:ro
+    - /home/jenkins/jenkins_slave/workspace/HUD Exchange - Deploy Local2 Stack (local2.mysite.com
+      on hudx-jenkins-slave)/cfml_root/wwwroot:/usr/local/apache2/htdocs:ro
+    - httpd-logs:/usr/local/apache2/logs:rw
+version: '3.6'
+volumes:
+  db-data: {}
+  httpd-logs: {}
+  lucee-fusionreactor-logs: {}
+  lucee-logs: {}
+  lucee-remote-client: {}
+  lucee-tomcat-logs: {}
+  redis-data: {}
+  solr_data: {}
+  solr_logs: {}
+

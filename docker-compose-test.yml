@@ -1,0 +1,12 @@
+version: '3.6'
+
+services:
+  parse:
+    build: .
+    image: secret-tags
+    environment:
+      SECRETS_DIR:
+    volumes:
+      - ./test/input/short.yml:/compose.yml
+      - /tmp/secrets:/tmp/secrets
+    command: /parse.py
