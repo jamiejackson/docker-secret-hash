@@ -1,5 +1,5 @@
 # docker-secret-hash
-Use hash tokens in docker secrets to get around immutable docker secret.
+Use hash tokens in docker compose secret names to get around immutable docker secret limitations.
 
 TODO: I need to clean up this repo.
 
