@@ -8,10 +8,10 @@ TODO: I need to clean up this repo.
 # put secrets in a temporary location for this example
 cp -r test/secrets/ /tmp/secrets
 
-# build the secret hasher
+# build the secret hasher image
 docker-compose -f docker-compose-test.yml build
 
-# create some variables to export
+# use the secret hasher container to create some variables to export
 docker-compose -f docker-compose-test.yml run parse >  ./output/secret-tags
 # take a look at the variables, for kicks
 cat ./output/secret-tags
