@@ -5,6 +5,41 @@ This uses file-based secrets. The secret hasher image would need to be tweaked i
 
 TODO: I need to clean up this repo.
 
+## Premise
+
+
+Your project's `docker-compose.yml` would have its secrets defined with the following convention.
+
+```yaml
+...
+secrets:
+  aws_inbound_path:
+    file: /secrets/aws_inbound_path
+    name: aws_inbound_path
+  cfml_app_secrets:
+    file: /secrets/credentials.properties
+    name: cfml_app_secrets
+...
+```
+
+The compose file will get parsed by the routines in this GitHub project and an INI-like file will be output, which looks like this:
+
+```sh
+# aws_inbound_path /secrets/aws_inbound_path
+SECRET_SUM_aws_inbound_path=900150983cd24fb0d6963f7d28e17f72
+# cfml_app_secrets /secrets/credentials.properties
+SECRET_SUM_cfml_app_secrets=4ed9407630eb1000c0f6b63842defa7d
+```
+
+In your project's build process (demonstrated later under the "Example" heading), a command is run that ends up doing this automatically:
+
+```sh
+export SECRET_SUM_aws_inbound_path=5ce25192496704043f42c835aaf6e61e
+export SECRET_SUM_cfml_app_secrets=d00d41c9779437670b6c2d098bd7f9e3
+```
+
+Which makes those variables available for normal `docker-compose` commands.
+
 ## Example
 
 ### Setup
@@ -52,20 +87,3 @@ echo "oh no, i'm a new secret value" > /tmp/secrets/aws_inbound_path
 ```
 
 Now, repeat the "Deploy Service" and "Test" steps, and you should see the test return the new secret value.
-
-## Notes
-
-\* The generated `./output/secret-tags` looks like the following.
-```ini
-# aws_inbound_path /tmp/secrets/aws_inbound_path
-SECRET_SUM_aws_inbound_path=5ce25192496704043f42c835aaf6e61e
-# cfml_app_secrets /tmp/secrets/credentials.properties
-SECRET_SUM_cfml_app_secrets=d00d41c9779437670b6c2d098bd7f9e3
-```
-
-The `export` command in the example (the one that's currently linux-only) ends up doing this:
-```sh
-export SECRET_SUM_aws_inbound_path=5ce25192496704043f42c835aaf6e61e
-export SECRET_SUM_cfml_app_secrets=d00d41c9779437670b6c2d098bd7f9e3
-```
-...which makes those variables ready for the `docker-compose ... config` command that follows.
