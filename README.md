@@ -22,7 +22,7 @@ secrets:
 ...
 ```
 
-The compose file will get parsed by the routines in this GitHub project and an INI-like file will be output, which looks like this:
+The compose file will get parsed by the routines in this GitHub project and an INI-like file will be output, which looks like the following. The value on the right side of the `=` is the md5sum of the _contents_ of the secret file.
 
 ```sh
 # aws_inbound_path /secrets/aws_inbound_path
