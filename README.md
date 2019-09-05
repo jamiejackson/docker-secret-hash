@@ -14,11 +14,11 @@ Your project's `docker-compose.yml` would have its secrets defined with the foll
 ...
 secrets:
   aws_inbound_path:
-    file: /secrets/aws_inbound_path
-    name: aws_inbound_path
+    file: /tmp/secrets/aws_inbound_path
+    name: aws_inbound_path-${SECRET_SUM_aws_inbound_path:-0}
   cfml_app_secrets:
-    file: /secrets/credentials.properties
-    name: cfml_app_secrets
+    file: /tmp/secrets/credentials.properties
+    name: cfml_app_secrets-${SECRET_SUM_cfml_app_secrets:-0}
 ...
 ```
 
