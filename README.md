@@ -38,7 +38,19 @@ export SECRET_SUM_aws_inbound_path=5ce25192496704043f42c835aaf6e61e
 export SECRET_SUM_cfml_app_secrets=d00d41c9779437670b6c2d098bd7f9e3
 ```
 
-Which makes those variables available for normal `docker-compose` commands.
+Which makes those variables available for normal `docker-compose` commands. So once the regular `docker-compose` command interpolates the variables, it would end up having the secrets named as follows:
+
+```yaml
+...
+secrets:
+  aws_inbound_path:
+    file: /tmp/secrets/aws_inbound_path
+    name: aws_inbound_path-5ce25192496704043f42c835aaf6e61e
+  cfml_app_secrets:
+    file: /tmp/secrets/credentials.properties
+    name: cfml_app_secrets-d00d41c9779437670b6c2d098bd7f9e3
+...
+```
 
 ## Example
 
